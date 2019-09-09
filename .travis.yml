@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t kmax/react-test -f ./client/Dockerfile.dev .
+
+script:
+  - docker run kmax/react-test npm run start -- --coverage
+
+after_success:
+  - docker build -t kmax/multi-client ./client
+  - docker build -t kmax/multi-nginx ./nginx
+  - docker build -t kmax/multi-server ./server
+  - docker build -t kmax/multi-worker ./worker
+  # Login to the Docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push to Docker Hub
+  - docker push kmax/multi-client
+  - docker push kmax/multi-nginx
+  - docker push kmax/multi-server
+  - docker push kmax/multi-worker
